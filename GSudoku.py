@@ -1,7 +1,10 @@
-import sudoku
+from Sudoku import sudoku
 import sys
-from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton
+try:
+    from PyQt5 import QtWidgets
+    from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton
+except:
+    input('Please install PyQt5 before using the GUI system. (press enter to close)')
 
 class sudokuApp(QMainWindow):
     def __init__(self):
