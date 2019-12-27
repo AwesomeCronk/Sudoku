@@ -61,7 +61,7 @@ class board():
                 #print(instances, end = ' ')
                 #print(len(instances))
                 if len(instances) > 1:    #check for multiple instances and throw an error
-                    error = True
+                    self.error = True
                     i.grid[instances[len(instances) - 1]] = 0
 
                 if len(instances) == 0:    #check to see if all grids are filled and set the won variable accordingly
@@ -78,7 +78,7 @@ class board():
                 #print(instances, end = ' ')
                 #print(len(instances))
                 if len(instances) > 1:    #check for multiple instances and throw an error
-                    error = True
+                    self.error = True
                     i.grid[instances[len(instances) - 1]] = 0
 
                 if len(instances) == 0:    #check to see if all grids are filled and set the won variable accordingly
@@ -95,7 +95,7 @@ class board():
                 #print(instances, end = ' ')
                 #print(len(instances))
                 if len(instances) > 1:    #check for multiple instances and throw an error
-                    error = True
+                    self.error = True
                     i.grid[instances[len(instances) - 1]] = 0
 
                 if len(instances) == 0:    #check to see if all grids are filled and set the won variable accordingly

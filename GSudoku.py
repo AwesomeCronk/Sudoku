@@ -1,3 +1,9 @@
+# GSudoku.py
+# Version history:
+# V 1.0.0
+# - Began logging version history. I had made a mistake with Git, so I must now rewrite much of the improvements I hade previously made.
+#
+
 from Sudoku import sudoku
 import sys
 try:
@@ -7,6 +13,11 @@ except:
     input('Please install PyQt5 before using the GUI system. (press enter to close)')
 
 class sudokuApp(QMainWindow):
+    activeGrid = 'no active grid'
+    possibleInputs = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    openStyle = "color: #000000; background-color: #FFFFFF;"
+    activeStyle = "color: #000000; background-color: #8080FF;"
+    disabledStyle = "color: #000000; background-color: #808080;"
     def __init__(self):
         super(sudokuApp, self).__init__()
         self.setWindowTitle('Sudoku')
@@ -33,6 +44,9 @@ class sudokuApp(QMainWindow):
         self.setupBtn.setText('Setup')
         self.solveBtn.setText('Solve')
         self.clearBtn.setText('Clear')
+        for x in range(9):
+            for y in range(9):
+                self.grids[x][y].setStyleSheet(self.openStyle)
 
     def resizeUI(self, desiredScale = 1):    #make them all the right size and scale them properly.
         self.scale = desiredScale
@@ -55,29 +69,60 @@ class sudokuApp(QMainWindow):
         for i in range(9):
             for j in range(9):
                 grid = self.grids[i][j]
-                grid.clicked.connect(self.setGrid)
+                grid.clicked.connect(self.selectGrid)
                 grid.setCheckable(True)
         self.setupBtn.clicked.connect(self.setup)
 
     def setup(self):
         self.b1.setup()
-        for i in range(9):
-            for j in range(9):
-                val = self.b1.rawread(i, j)
-                if val != 0:
-                    self.grids[i][j].setText(str(val))
+        for x in range(9):
+            for y in range(9):
+                val = self.b1.rawread(x, y)
+                grid = self.grids[x][y]
+                if val == 0:
+                    grid.setText('')
+                    grid.setEnabled(True)
+                    grid.setStyleSheet(self.openStyle)
+                else:
+                    grid.setText(str(val))
+                    grid.setEnabled(False)
+                    grid.setStyleSheet(self.disabledStyle)
 
-    def setGrid(self):
-        for i in range(9):
-            for j in range(9):
-                grid = self.grids[i][j]
+
+    def selectGrid(self):
+        for x in range(9):
+            for y in range(9):
+                grid = self.grids[x][y]
                 if grid.isChecked():
-                    x = i
-                    y = j
-        self.grids[x][y].setText('x')
+                    grid.setCheckable(False)    #reset the grid's checkable state, thereby unchecking it.
+                    grid.setCheckable(True)
+                    self.activeGrid = (x, y)
+                    grid.setStyleSheet(self.activeStyle)
+
+    def editGrid(self, key):
+        x, y = self.activeGrid
+        #for i in self.possibleInputs:
+        print(key)
+
+    def keyPressEvent(self, event):    #This is the keypress detector. I use this to determine input to edit grids.
+        try:
+            print(event.key())
+            key = event.key() - 48
+            print(key)
+            x, y = self.activeGrid
+            if len(sudoku.findall(self.possibleInputs, key)) == 1:    #if the input is within the legal range
+                self.grids[x][y].setText(str(key))
+                sudoku.rawplace(x, y, key)
+        except:
+            pass
 
 def Game():
     app = QApplication(sys.argv)
     gameInstance = sudokuApp()
     gameInstance.show()
     app.exec_()
+
+def reloadEngine():
+    import importlib
+    importlib.reload(sudoku)
+    print('Reloaded sudoku game engine.')
