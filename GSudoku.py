@@ -2,6 +2,8 @@
 # Version history:
 # V 1.0.0
 # - Began logging version history. I had made a mistake with Git, so I must now rewrite much of the improvements I hade previously made.
+# V 1.0.1
+# - Fixed an issue with the active grid remaining active after reset and not clearing the styles of previous active grids.
 #
 
 from Sudoku import sudoku
@@ -75,6 +77,7 @@ class sudokuApp(QMainWindow):
 
     def setup(self):
         self.b1.setup()
+        self.activeGrid = 'no active grid'
         for x in range(9):
             for y in range(9):
                 val = self.b1.rawread(x, y)
@@ -90,6 +93,9 @@ class sudokuApp(QMainWindow):
 
 
     def selectGrid(self):
+        if type(self.activeGrid) == type((8, 7)):
+            x, y = self.activeGrid
+            self.grids[x][y].setStyleSheet(self.openStyle)
         for x in range(9):
             for y in range(9):
                 grid = self.grids[x][y]
