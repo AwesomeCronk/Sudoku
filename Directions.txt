@@ -1,7 +1,18 @@
 How to play (Python command line):
+
 To play a text-based game of sudoku:
 
+Open a python terminal in the game's directory.
 >>> from Sudoku import sudoku
 >>> b1 = sudoku.board()
 >>> b1.setup()
 >>> b1.printboard()    #This function has three modes. Pass the strings mode = 'pretty', mode = 'rows', or mode = 'cols'. Default (no params) is 'pretty', which displays a border around the grids.
+>>> b1.place(x, y, val)    #This function is usd to place items on the board. Use 1-9 for x, y, and val.
+>>> b1.check()    #This function checks the board for violations to th game rules and removes that last occurence of the violation.
+Use these last three functions repeatedly until you have filled the board.
+
+To play a graphical game of sudoku:
+
+Open a python terminal in the game's directory.
+>>> from Sudoku import GSudoku as GS
+>>> GS.Game()    #This function launches the GUI application.

@@ -7,7 +7,6 @@
 #
 
 from Sudoku import sudoku
-import sys
 try:
     from PyQt5 import QtWidgets
     from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton
@@ -24,7 +23,7 @@ class sudokuApp(QMainWindow):
         super(sudokuApp, self).__init__()
         self.setWindowTitle('Sudoku')
         self.createUI()
-        self.resizeUI()
+        self.configureUI()
         self.activateUI()
         self.b1 = sudoku.board()
 
@@ -40,42 +39,47 @@ class sudokuApp(QMainWindow):
                       [QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self)],
                       [QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self)]]
         
-        self.setupBtn = QPushButton(self)
-        self.solveBtn = QPushButton(self)
+        self.setupBtn = QPushButton(self)    #Create the control buttons.
         self.clearBtn = QPushButton(self)
-        self.setupBtn.setText('Setup')
-        self.solveBtn.setText('Solve')
-        self.clearBtn.setText('Clear')
-        for x in range(9):
-            for y in range(9):
-                self.grids[x][y].setStyleSheet(self.openStyle)
+        self.checkBtn = QPushButton(self)
+        self.solveBtn = QPushButton(self)
 
-    def resizeUI(self, desiredScale = 1):    #make them all the right size and scale them properly.
-        self.scale = desiredScale
+    def configureUI(self, desiredScale = 1):    #Scale, position, and set style sheets and text properly.
+        self.scale = desiredScale    #Calculate the sizes needed for the given scale.
         self.gridwidth = 40 * self.scale
         self.gridheight = 40 * self.scale
         self.spacing = 5 * self.scale
         self.boardWidth = self.spacing + (9 * (self.spacing + self.gridwidth))
         self.boardHeight = self.spacing + (9 * (self.spacing + self.gridheight))
 
-        for i in range(9):
-            for j in range(9):
-                grid = self.grids[i][j]
-                grid.setGeometry(self.spacing + (j * (self.spacing + self.gridwidth)), self.spacing + (i * (self.spacing + self.gridheight)), self.gridwidth, self.gridheight)
+        for x in range(9):
+            for y in range(9):
+                grid = self.grids[x][y]
+                grid.setGeometry(self.spacing + (y * (self.spacing + self.gridwidth)), self.spacing + (x * (self.spacing + self.gridheight)), self.gridwidth, self.gridheight)
+                grid.setStyleSheet(self.openStyle)
+
         self.setupBtn.setGeometry(self.spacing, self.boardHeight, (self.scale * 80), (self.scale * 30))
-        self.solveBtn.setGeometry((self.spacing * 2) + (self.scale * 80), self.boardHeight, (self.scale * 80), (self.scale * 30))
-        self.clearBtn.setGeometry((self.spacing * 3) + (self.scale * 160), self.boardHeight, (self.scale * 80), (self.scale * 30))
+        self.clearBtn.setGeometry((self.spacing * 2) + (self.scale * 80), self.boardHeight, (self.scale * 80), (self.scale * 30))
+        self.checkBtn.setGeometry((self.spacing * 3) + (self.scale * 160), self.boardHeight, (self.scale * 80), (self.scale * 30))
+        self.solveBtn.setGeometry((self.spacing * 4) + (self.scale * 240), self.boardHeight, (self.scale * 80), (self.scale * 30))
+
+        self.setupBtn.setText('Setup')
+        self.clearBtn.setText('Clear')
+        self.checkBtn.setText('Check')
+        self.solveBtn.setText('Solve')
+
         self.setFixedSize(self.boardWidth, self.boardHeight + (self.scale * 30) + self.spacing)
 
-    def activateUI(self):
-        for i in range(9):
-            for j in range(9):
-                grid = self.grids[i][j]
+    def activateUI(self):    #Connect them to their respective functions.
+        for x in range(9):
+            for y in range(9):
+                grid = self.grids[x][y]
                 grid.clicked.connect(self.selectGrid)
                 grid.setCheckable(True)
         self.setupBtn.clicked.connect(self.setup)
+        self.clearBtn.clicked.connect(self.clear)
 
-    def setup(self):
+    def setup(self):    #Set up the board for a new game.
         self.b1.setup()
         self.activeGrid = 'no active grid'
         for x in range(9):
@@ -91,8 +95,17 @@ class sudokuApp(QMainWindow):
                     grid.setEnabled(False)
                     grid.setStyleSheet(self.disabledStyle)
 
+    def clear(self):    #Clear the board.
+        self.b1.clear()
+        for x in range(9):
+            for y in range(9):
+                grid = self.grids[x][y]
+                grid.setEnabled(True)
+                grid.setStyleSheet(self.openStyle)
+                grid.setText('')
+                self.activeGrid = 'no active grid'
 
-    def selectGrid(self):
+    def selectGrid(self):    #Determine the grid clicked on by the user. Color it and reset its toggled state.
         if type(self.activeGrid) == type((8, 7)):
             x, y = self.activeGrid
             self.grids[x][y].setStyleSheet(self.openStyle)
@@ -105,31 +118,31 @@ class sudokuApp(QMainWindow):
                     self.activeGrid = (x, y)
                     grid.setStyleSheet(self.activeStyle)
 
-    def editGrid(self, key):
+    def editGrid(self, key):    #Plug a value into a grid and send it to the sudoku engine.
         x, y = self.activeGrid
         if len(sudoku.findall(self.possibleInputs, key)) == 1:    #if the input is within the legal range
             self.grids[x][y].setText(str(key))
             sudoku.rawplace(x, y, key)
-        elif key == 16777171:
+        elif key == 16777171:     #Detect a backspace and clear the grid and put a zero in the sudoku engine.
             self.grids[x][y].setText('')
             sudoku.rawplace(x, y, 0)
 
     def keyPressEvent(self, event):    #This is the keypress detector. I use this to determine input to edit grids.
         try:
             print(event.key())
-            key = event.key() - 48
+            key = event.key() - 48    #Seems that the number keys are keyed in equivalent to their value + 48. This operation is also applied to the backspace key as well.
             print(key)
             self.editGrid(key)
         except:
             pass
 
-def Game():
-    app = QApplication(sys.argv)
+def Game():    #Triggers all the magic above.
+    app = QApplication([])
     gameInstance = sudokuApp()
     gameInstance.show()
     app.exec_()
 
-def reloadEngine():
+def reloadEngine():    #Function to reload the sudoku engine, so that I can continue working in the same terminal.
     import importlib
     importlib.reload(sudoku)
     print('Reloaded sudoku game engine.')
