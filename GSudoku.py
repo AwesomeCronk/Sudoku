@@ -107,18 +107,19 @@ class sudokuApp(QMainWindow):
 
     def editGrid(self, key):
         x, y = self.activeGrid
-        #for i in self.possibleInputs:
-        print(key)
+        if len(sudoku.findall(self.possibleInputs, key)) == 1:    #if the input is within the legal range
+            self.grids[x][y].setText(str(key))
+            sudoku.rawplace(x, y, key)
+        elif key == 16777171:
+            self.grids[x][y].setText('')
+            sudoku.rawplace(x, y, 0)
 
     def keyPressEvent(self, event):    #This is the keypress detector. I use this to determine input to edit grids.
         try:
             print(event.key())
             key = event.key() - 48
             print(key)
-            x, y = self.activeGrid
-            if len(sudoku.findall(self.possibleInputs, key)) == 1:    #if the input is within the legal range
-                self.grids[x][y].setText(str(key))
-                sudoku.rawplace(x, y, key)
+            self.editGrid(key)
         except:
             pass
 

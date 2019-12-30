@@ -109,7 +109,7 @@ class board():
             self.won = False
             self.check()
                 
-    def printboard(self, mode = 'rows'):
+    def printboard(self, mode = 'pretty'):
         if mode == 'rows':
             for i in self.rows:
                 for j in range(len(i.grid)):

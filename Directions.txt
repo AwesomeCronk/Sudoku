@@ -1,0 +1,7 @@
+How to play (Python command line):
+To play a text-based game of sudoku:
+
+>>> from Sudoku import sudoku
+>>> b1 = sudoku.board()
+>>> b1.setup()
+>>> b1.printboard()    #This function has three modes. Pass the strings mode = 'pretty', mode = 'rows', or mode = 'cols'. Default (no params) is 'pretty', which displays a border around the grids.
