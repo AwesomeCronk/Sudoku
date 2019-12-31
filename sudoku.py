@@ -37,7 +37,7 @@ class board():
         for i in range(9):
             for j in range(9):
                 self.rawplace(i, j, rnd.randint(1, 9))
-        self.check()
+        self.rawcheck(mode = 'remove')
         for i in range(rnd.randint(numtoremove, numtoremove + 10)):
             self.rawplace(rnd.randint(0, 8), rnd.randint(0, 8), 0)
             
@@ -52,17 +52,29 @@ class board():
             for j in i.grid:
                 j = 0
             
-    def check(self):
+    def check(self, mode = 'flag'):
+        errors = self.check(mode = mode)
+        niceErrors = []
+        for i in errors:
+            a, b = i
+            niceErrors.append(a + 1, b + 1)
+        return niceErrors
+
+    def rawcheck(self, mode = 'flag'):
+        self.errors = []
         self.error = False
-        for i in self.rows:
-            #print('checking {}'.format(str(i)))
-            for j in range(1, 10):
-                instances = findall(i.grid, j)
-                #print(instances, end = ' ')
-                #print(len(instances))
+        for i in range(9):     #address of the rows
+            print('checking row {}'.format(str(i)))
+            for j in range(1, 10):    #numbers to be checked
+                instances = findall(self.rows[i].grid, j)    #find all the instances of the current number
+                print(instances, end = ' ')
+                print(len(instances))
                 if len(instances) > 1:    #check for multiple instances and throw an error
                     self.error = True
-                    i.grid[instances[len(instances) - 1]] = 0
+                    for k in instances:    #for each grid which has an error
+                        self.errors.append((k, i))    #append the x and y locations of the error in a tuple to the board's list of errors
+                    if mode == 'remove':
+                        self.rows[i].grid[instances[len(instances) - 1]] = 0
 
                 if len(instances) == 0:    #check to see if all grids are filled and set the won variable accordingly
                     self.won = True
@@ -71,43 +83,50 @@ class board():
         self.carry('rows', 'cols')
         self.carry('rows', 'subs')
         
-        for i in self.cols:
-            #print('checking {}'.format(str(i)))
-            for j in range(1, 10):
-                instances = findall(i.grid, j)
-                #print(instances, end = ' ')
-                #print(len(instances))
+        for i in range(9):     #address of the rows
+            print('checking col {}'.format(str(i)))
+            for j in range(1, 10):    #numbers to be checked
+                instances = findall(self.cols[i].grid, j)    #find all the instances of the current number
+                print(instances, end = ' ')
+                print(len(instances))
                 if len(instances) > 1:    #check for multiple instances and throw an error
                     self.error = True
-                    i.grid[instances[len(instances) - 1]] = 0
+                    for k in instances:    #for each grid which has an error
+                        self.errors.append((i, k))    #append the x and y locations of the error in a tuple to the board's list of errors
+                    if mode == 'remove':
+                        self.cols[i].grid[instances[len(instances) - 1]] = 0
 
                 if len(instances) == 0:    #check to see if all grids are filled and set the won variable accordingly
                     self.won = True
                 else:
                     self.won = False
         self.carry('cols', 'rows')
-        self.carry('rows', 'subs')
+        self.carry('cols', 'subs')
         
-        for i in self.subs:
-            #print('checking {}'.format(str(i)))
-            for j in range(1, 10):
-                instances = findall(i.grid, j)
-                #print(instances, end = ' ')
-                #print(len(instances))
+        for i in range(9):     #address of the rows
+            print('checking sub {}'.format(str(i)))
+            for j in range(1, 10):    #numbers to be checked
+                instances = findall(self.subs[i].grid, j)    #find all the instances of the current number
+                print(instances, end = ' ')
+                print(len(instances))
                 if len(instances) > 1:    #check for multiple instances and throw an error
                     self.error = True
-                    i.grid[instances[len(instances) - 1]] = 0
+                    for k in instances:    #for each grid which has an error
+                        self.errors.append(self.subsToCoord(i, k))    #append the x and y locations of the error in a tuple to the board's list of errors
+                    if mode == 'remove':
+                        self.subs[i].grid[instances[len(instances) - 1]] = 0
 
                 if len(instances) == 0:    #check to see if all grids are filled and set the won variable accordingly
                     self.won = True
                 else:
                     self.won = False
         self.carry('subs', 'rows')
-        self.carry('rows', 'cols')
+        self.carry('subs', 'cols')
         
-        if self.error:
+        if len(self.errors) and mode == 'remove':
             self.won = False
-            self.check()
+            self.rawcheck(mode = 'remove')
+
                 
     def printboard(self, mode = 'pretty'):
         if mode == 'rows':
@@ -134,16 +153,16 @@ class board():
     
     def place(self, xloc, yloc, val):
         try:
-            #print(str(xloc) + ', ' + str(yloc) + ', ' + str(val))
+            print(str(xloc) + ', ' + str(yloc) + ', ' + str(val))
             return self.rawplace(int(xloc) - 1, int(yloc) - 1, int(val))
         except:
             return False
     
     def rawplace(self, xloc, yloc, val):
-        #print("function: 'rawplace'")
+        print("function: 'rawplace'")
         try:
             if xloc > 8 or xloc < 0 or yloc > 8 or yloc < 0:
-                #print('Out of range')
+                print('Out of range')
                 return False
             else:
                 self.rows[yloc].grid[xloc] = val
@@ -162,7 +181,7 @@ class board():
     def rawread(self, xloc, yloc):
         try:
             if xloc > 8 or xloc < 0 or yloc > 8 or yloc < 0:
-                #print('Out of range')
+                print('Out of range')
                 return False
             else:
                 return self.rows[yloc].grid[xloc]
@@ -179,187 +198,58 @@ class board():
             for x in range(9):    #for each grid in the board
                 for y in range(9):
                     self.rows[y].grid[x] = self.cols[x].grid[y]    #set that row.grid equal to that col.grid
+        
         if set1 == 'rows' and set2 == 'subs':
-            self.subs[0].grid[0] = self.rows[0].grid[0]    #first row
-            self.subs[0].grid[1] = self.rows[0].grid[1]
-            self.subs[0].grid[2] = self.rows[0].grid[2]
-            self.subs[0].grid[3] = self.rows[1].grid[0]
-            self.subs[0].grid[4] = self.rows[1].grid[1]
-            self.subs[0].grid[5] = self.rows[1].grid[2]
-            self.subs[0].grid[6] = self.rows[2].grid[0]
-            self.subs[0].grid[7] = self.rows[2].grid[1]
-            self.subs[0].grid[8] = self.rows[2].grid[2]
-            
-            self.subs[1].grid[0] = self.rows[0].grid[3]
-            self.subs[1].grid[1] = self.rows[0].grid[4]
-            self.subs[1].grid[2] = self.rows[0].grid[5]
-            self.subs[1].grid[3] = self.rows[1].grid[3]
-            self.subs[1].grid[4] = self.rows[1].grid[4]
-            self.subs[1].grid[5] = self.rows[1].grid[5]
-            self.subs[1].grid[6] = self.rows[2].grid[3]
-            self.subs[1].grid[7] = self.rows[2].grid[4]
-            self.subs[1].grid[8] = self.rows[2].grid[5]
-            
-            self.subs[2].grid[0] = self.rows[0].grid[6]
-            self.subs[2].grid[1] = self.rows[0].grid[7]
-            self.subs[2].grid[2] = self.rows[0].grid[8]
-            self.subs[2].grid[3] = self.rows[1].grid[6]
-            self.subs[2].grid[4] = self.rows[1].grid[7]
-            self.subs[2].grid[5] = self.rows[1].grid[8]
-            self.subs[2].grid[6] = self.rows[2].grid[6]
-            self.subs[2].grid[7] = self.rows[2].grid[7]
-            self.subs[2].grid[8] = self.rows[2].grid[8]
-            
-            self.subs[3].grid[0] = self.rows[3].grid[0]    #second row
-            self.subs[3].grid[1] = self.rows[3].grid[1]
-            self.subs[3].grid[2] = self.rows[3].grid[2]
-            self.subs[3].grid[3] = self.rows[4].grid[0]
-            self.subs[3].grid[4] = self.rows[4].grid[1]
-            self.subs[3].grid[5] = self.rows[4].grid[2]
-            self.subs[3].grid[6] = self.rows[5].grid[0]
-            self.subs[3].grid[7] = self.rows[5].grid[1]
-            self.subs[3].grid[8] = self.rows[5].grid[2]
-            
-            self.subs[4].grid[0] = self.rows[3].grid[3]
-            self.subs[4].grid[1] = self.rows[3].grid[4]
-            self.subs[4].grid[2] = self.rows[3].grid[5]
-            self.subs[4].grid[3] = self.rows[4].grid[3]
-            self.subs[4].grid[4] = self.rows[4].grid[4]
-            self.subs[4].grid[5] = self.rows[4].grid[5]
-            self.subs[4].grid[6] = self.rows[5].grid[3]
-            self.subs[4].grid[7] = self.rows[5].grid[4]
-            self.subs[4].grid[8] = self.rows[5].grid[5]
-            
-            self.subs[5].grid[0] = self.rows[3].grid[6]
-            self.subs[5].grid[1] = self.rows[3].grid[7]
-            self.subs[5].grid[2] = self.rows[3].grid[8]
-            self.subs[5].grid[3] = self.rows[4].grid[6]
-            self.subs[5].grid[4] = self.rows[4].grid[7]
-            self.subs[5].grid[5] = self.rows[4].grid[8]
-            self.subs[5].grid[6] = self.rows[5].grid[6]
-            self.subs[5].grid[7] = self.rows[5].grid[7]
-            self.subs[5].grid[8] = self.rows[5].grid[8]
-            
-            self.subs[6].grid[0] = self.rows[6].grid[0]    #third row
-            self.subs[6].grid[1] = self.rows[6].grid[1]
-            self.subs[6].grid[2] = self.rows[6].grid[2]
-            self.subs[6].grid[3] = self.rows[7].grid[0]
-            self.subs[6].grid[4] = self.rows[7].grid[1]
-            self.subs[6].grid[5] = self.rows[7].grid[2]
-            self.subs[6].grid[6] = self.rows[8].grid[0]
-            self.subs[6].grid[7] = self.rows[8].grid[1]
-            self.subs[6].grid[8] = self.rows[8].grid[2]
-            
-            self.subs[7].grid[0] = self.rows[6].grid[3]
-            self.subs[7].grid[1] = self.rows[6].grid[4]
-            self.subs[7].grid[2] = self.rows[6].grid[5]
-            self.subs[7].grid[3] = self.rows[7].grid[3]
-            self.subs[7].grid[4] = self.rows[7].grid[4]
-            self.subs[7].grid[5] = self.rows[7].grid[5]
-            self.subs[7].grid[6] = self.rows[8].grid[3]
-            self.subs[7].grid[7] = self.rows[8].grid[4]
-            self.subs[7].grid[8] = self.rows[8].grid[5]
-            
-            self.subs[8].grid[0] = self.rows[6].grid[6]
-            self.subs[8].grid[1] = self.rows[6].grid[7]
-            self.subs[8].grid[2] = self.rows[6].grid[8]
-            self.subs[8].grid[3] = self.rows[7].grid[6]
-            self.subs[8].grid[4] = self.rows[7].grid[7]
-            self.subs[8].grid[5] = self.rows[7].grid[8]
-            self.subs[8].grid[6] = self.rows[8].grid[6]
-            self.subs[8].grid[7] = self.rows[8].grid[7]
-            self.subs[8].grid[8] = self.rows[8].grid[8]
+            for i in range(3):    #for each row of subs
+                for j in range(3):    #for each row in that row of subs
+                    for k in range(3):    #for each third of that row
+                        for l in range(3):    #for each grid in that third
+                            self.subs[(3 * i) + k].grid[(3 * j) + l] = self.rows[(3 * k) + l].grid[(3 * i) + j]
             
         if set1 == 'subs' and set2 == 'rows':
-            self.rows[0].grid[0] = self.subs[0].grid[0]    #first row
-            self.rows[0].grid[1] = self.subs[0].grid[1]
-            self.rows[0].grid[2] = self.subs[0].grid[2]
-            self.rows[1].grid[0] = self.subs[0].grid[3]
-            self.rows[1].grid[1] = self.subs[0].grid[4]
-            self.rows[1].grid[2] = self.subs[0].grid[5]
-            self.rows[2].grid[0] = self.subs[0].grid[6]
-            self.rows[2].grid[1] = self.subs[0].grid[7]
-            self.rows[2].grid[2] = self.subs[0].grid[8]
+            for i in range(3):    #for each row of subs
+                for j in range(3):    #for each row in that row of subs
+                    for k in range(3):    #for each third of that row
+                        for l in range(3):    #for each grid in that third
+                            self.rows[(3 * k) + l].grid[(3 * i) + j] = self.subs[(3 * i) + k].grid[(3 * j) + l]
+
+        if set1 == 'cols' and set2 == 'subs':
+            for i in range(3):    #for each row of subs
+                for j in range(3):    #for each row in that row of subs
+                    for k in range(3):    #for each third of that row
+                        for l in range(3):    #for each grid in that third
+                            self.subs[(3 * i) + k].grid[(3 * j) + l] = self.rows[(3 * i) + j].grid[(3 * k) + l]
             
-            self.rows[0].grid[3] = self.subs[1].grid[0]
-            self.rows[0].grid[4] = self.subs[1].grid[1]
-            self.rows[0].grid[5] = self.subs[1].grid[2]
-            self.rows[1].grid[3] = self.subs[1].grid[3]
-            self.rows[1].grid[4] = self.subs[1].grid[4]
-            self.rows[1].grid[5] = self.subs[1].grid[5]
-            self.rows[2].grid[3] = self.subs[1].grid[6]
-            self.rows[2].grid[4] = self.subs[1].grid[7]
-            self.rows[2].grid[5] = self.subs[1].grid[8]
-            
-            self.rows[0].grid[6] = self.subs[2].grid[0]
-            self.rows[0].grid[7] = self.subs[2].grid[1]
-            self.rows[0].grid[8] = self.subs[2].grid[2]
-            self.rows[1].grid[6] = self.subs[2].grid[3]
-            self.rows[1].grid[7] = self.subs[2].grid[4]
-            self.rows[1].grid[8] = self.subs[2].grid[5]
-            self.rows[2].grid[6] = self.subs[2].grid[6]
-            self.rows[2].grid[7] = self.subs[2].grid[7]
-            self.rows[2].grid[8] = self.subs[2].grid[8]
-            
-            self.rows[3].grid[0] = self.subs[3].grid[0]    #second row
-            self.rows[3].grid[1] = self.subs[3].grid[1]
-            self.rows[3].grid[2] = self.subs[3].grid[2]
-            self.rows[4].grid[0] = self.subs[3].grid[3]
-            self.rows[4].grid[1] = self.subs[3].grid[4]
-            self.rows[4].grid[2] = self.subs[3].grid[5]
-            self.rows[5].grid[0] = self.subs[3].grid[6]
-            self.rows[5].grid[1] = self.subs[3].grid[7]
-            self.rows[5].grid[2] = self.subs[3].grid[8]
-            
-            self.rows[3].grid[3] = self.subs[4].grid[0]
-            self.rows[3].grid[4] = self.subs[4].grid[1]
-            self.rows[3].grid[5] = self.subs[4].grid[2]
-            self.rows[4].grid[3] = self.subs[4].grid[3]
-            self.rows[4].grid[4] = self.subs[4].grid[4]
-            self.rows[4].grid[5] = self.subs[4].grid[5]
-            self.rows[5].grid[3] = self.subs[4].grid[6]
-            self.rows[5].grid[4] = self.subs[4].grid[7]
-            self.rows[5].grid[5] = self.subs[4].grid[8]
-            
-            self.rows[3].grid[6] = self.subs[5].grid[0]
-            self.rows[3].grid[7] = self.subs[5].grid[1]
-            self.rows[3].grid[8] = self.subs[5].grid[2]
-            self.rows[4].grid[6] = self.subs[5].grid[3]
-            self.rows[4].grid[7] = self.subs[5].grid[4]
-            self.rows[4].grid[8] = self.subs[5].grid[5]
-            self.rows[5].grid[6] = self.subs[5].grid[6]
-            self.rows[5].grid[7] = self.subs[5].grid[7]
-            self.rows[5].grid[8] = self.subs[5].grid[8]
-            
-            self.rows[6].grid[0] = self.subs[6].grid[0]    #third row
-            self.rows[6].grid[1] = self.subs[6].grid[1]
-            self.rows[6].grid[2] = self.subs[6].grid[2]
-            self.rows[7].grid[0] = self.subs[6].grid[3]
-            self.rows[7].grid[1] = self.subs[6].grid[4]
-            self.rows[7].grid[2] = self.subs[6].grid[5]
-            self.rows[8].grid[0] = self.subs[6].grid[6]
-            self.rows[8].grid[1] = self.subs[6].grid[7]
-            self.rows[8].grid[2] = self.subs[6].grid[8]
-            
-            self.rows[6].grid[3] = self.subs[7].grid[0]
-            self.rows[6].grid[4] = self.subs[7].grid[1]
-            self.rows[6].grid[5] = self.subs[7].grid[2]
-            self.rows[7].grid[3] = self.subs[7].grid[3]
-            self.rows[7].grid[4] = self.subs[7].grid[4]
-            self.rows[7].grid[5] = self.subs[7].grid[5]
-            self.rows[8].grid[3] = self.subs[7].grid[6]
-            self.rows[8].grid[4] = self.subs[7].grid[7]
-            self.rows[8].grid[5] = self.subs[7].grid[8]
-            
-            self.rows[6].grid[6] = self.subs[8].grid[0]
-            self.rows[6].grid[7] = self.subs[8].grid[1]
-            self.rows[6].grid[8] = self.subs[8].grid[2]
-            self.rows[7].grid[6] = self.subs[8].grid[3]
-            self.rows[7].grid[7] = self.subs[8].grid[4]
-            self.rows[7].grid[8] = self.subs[8].grid[5]
-            self.rows[8].grid[6] = self.subs[8].grid[6]
-            self.rows[8].grid[7] = self.subs[8].grid[7]
-            self.rows[8].grid[8] = self.subs[8].grid[8]
+        if set1 == 'subs' and set2 == 'cols':
+            for i in range(3):    #for each row of subs
+                for j in range(3):    #for each row in that row of subs
+                    for k in range(3):    #for each third of that row
+                        for l in range(3):    #for each grid in that third
+                            self.rows[(3 * i) + j].grid[(3 * k) + l] = self.subs[(3 * i) + k].grid[(3 * j) + l]
+
+    def coordToSubs(self, xIn, yIn):
+        for i in range(3):    #for each row of subs
+            for j in range(3):    #for each row in that row of subs
+                for k in range(3):    #for each third of that row
+                    for l in range(3):    #for each grid in that third
+                        x = (3 * i) + j
+                        y = (3 * k) + l
+                        subID = (3 * i) + k
+                        gridID = (3 * j) + l
+                        if x == xIn and y == yIn:
+                            return (subID, gridID)
+
+    def subsToCoord(self, subIn, gridIn):
+        for i in range(3):    #for each row of subs
+            for j in range(3):    #for each row in that row of subs
+                for k in range(3):    #for each third of that row
+                    for l in range(3):    #for each grid in that third
+                        x = (3 * i) + j
+                        y = (3 * k) + l
+                        subID = (3 * i) + k
+                        gridID = (3 * j) + l
+                        if subID == subIn and gridID == gridIn:
+                            return (x, y)
         
 def findall(listin, x):
     occurences = []

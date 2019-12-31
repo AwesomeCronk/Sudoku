@@ -4,7 +4,12 @@
 # - Began logging version history. I had made a mistake with Git, so I must now rewrite much of the improvements I hade previously made.
 # V 1.0.1
 # - Fixed an issue with the active grid remaining active after reset and not clearing the styles of previous active grids.
-#
+# V 1.0.2
+# - Added a directions file. Added ability to clear a grid in the GUI. Changed the default setting for sudoku.b1.printboard() to 'pretty'.
+# V 1.0.3
+# - Added a clear button and connected it. Updated the directions to a slight degree.
+# V 1.0.4
+# - Replaced the 200 or so lines of hard code in sudoku.check for the subgrid carry with an algorithm. Utilized that algirithm to find the x, y coordinates of dubgrid locations. Added a mode system to sudoku.check which flags errors instead of clearing them.
 
 from Sudoku import sudoku
 try:
@@ -19,6 +24,9 @@ class sudokuApp(QMainWindow):
     openStyle = "color: #000000; background-color: #FFFFFF;"
     activeStyle = "color: #000000; background-color: #8080FF;"
     disabledStyle = "color: #000000; background-color: #808080;"
+    errorStyle = "color: #000000; background-color: #FF0000;"
+    badGrids = []
+    lockedGrids = []
     def __init__(self):
         super(sudokuApp, self).__init__()
         self.setWindowTitle('Sudoku')
@@ -80,6 +88,7 @@ class sudokuApp(QMainWindow):
         self.clearBtn.clicked.connect(self.clear)
 
     def setup(self):    #Set up the board for a new game.
+        self.lockedGrids = []
         self.b1.setup()
         self.activeGrid = 'no active grid'
         for x in range(9):
@@ -94,7 +103,7 @@ class sudokuApp(QMainWindow):
                     grid.setText(str(val))
                     grid.setEnabled(False)
                     grid.setStyleSheet(self.disabledStyle)
-
+                    self.lockedGrids.append((x, y))
     def clear(self):    #Clear the board.
         self.b1.clear()
         for x in range(9):
@@ -104,6 +113,15 @@ class sudokuApp(QMainWindow):
                 grid.setStyleSheet(self.openStyle)
                 grid.setText('')
                 self.activeGrid = 'no active grid'
+
+    def check(self):
+        for i in self.badGrids:
+            x, y = i
+            self.grids[x][y].setStyleSheet(self.openStyle)
+        self.badGrids = self.b1.rawcheck(mode = 'flag')
+        for i in self.badGrids:
+            x, y = i
+            self.grids[x][y].setStyleSheet(self.errorStyle)
 
     def selectGrid(self):    #Determine the grid clicked on by the user. Color it and reset its toggled state.
         if type(self.activeGrid) == type((8, 7)):
