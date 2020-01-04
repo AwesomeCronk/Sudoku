@@ -36,7 +36,7 @@ class sudokuApp(QMainWindow):
         self.b1 = sudoku.board()
 
     def createUI(self):    #Create all the buttons, etcetera
-        #nine columns of buttons, nine buttons to a column
+        #nine columns of buttons, nine buttons to a column. Reference grids with self.grids[x][y]
         self.grids = [[QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self)],
                       [QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self)],
                       [QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self), QPushButton(self)],
@@ -63,7 +63,7 @@ class sudokuApp(QMainWindow):
         for x in range(9):
             for y in range(9):
                 grid = self.grids[x][y]
-                grid.setGeometry(self.spacing + (y * (self.spacing + self.gridwidth)), self.spacing + (x * (self.spacing + self.gridheight)), self.gridwidth, self.gridheight)
+                grid.setGeometry(self.spacing + (x * (self.spacing + self.gridwidth)), self.spacing + (y * (self.spacing + self.gridheight)), self.gridwidth, self.gridheight)
                 grid.setStyleSheet(self.openStyle)
 
         self.setupBtn.setGeometry(self.spacing, self.boardHeight, (self.scale * 80), (self.scale * 30))
@@ -86,7 +86,8 @@ class sudokuApp(QMainWindow):
                 grid.setCheckable(True)
         self.setupBtn.clicked.connect(self.setup)
         self.clearBtn.clicked.connect(self.clear)
-
+        self.checkBtn.clicked.connect(self.check)
+        
     def setup(self):    #Set up the board for a new game.
         self.lockedGrids = []
         self.b1.setup()
@@ -114,14 +115,15 @@ class sudokuApp(QMainWindow):
                 grid.setText('')
                 self.activeGrid = 'no active grid'
 
-    def check(self):
-        for i in self.badGrids:
-            x, y = i
-            self.grids[x][y].setStyleSheet(self.openStyle)
-        self.badGrids = self.b1.rawcheck(mode = 'flag')
-        for i in self.badGrids:
-            x, y = i
-            self.grids[x][y].setStyleSheet(self.errorStyle)
+    def check(self):    #check the board and turn bad grids red.
+        self.b1.printboard()    #print the board to check that things are overlaying correctly
+        for i in self.badGrids:    #for each of the previous bad grids
+            x, y = i    #unpack their (x, y) coordinates
+            self.grids[x][y].setStyleSheet(self.openStyle)    #color that grid
+        self.badGrids = self.b1.rawcheck(mode = 'flag')    #get the new list of errors
+        for i in self.badGrids:    #for each of the new bad grids
+            x, y = i    #unpack the (x, y) coordinates
+            self.grids[x][y].setStyleSheet(self.errorStyle)    #color that grid
 
     def selectGrid(self):    #Determine the grid clicked on by the user. Color it and reset its toggled state.
         if type(self.activeGrid) == type((8, 7)):
@@ -137,13 +139,17 @@ class sudokuApp(QMainWindow):
                     grid.setStyleSheet(self.activeStyle)
 
     def editGrid(self, key):    #Plug a value into a grid and send it to the sudoku engine.
+        print('Function: editGrid')
         x, y = self.activeGrid
+        print('got active grid.')
         if len(sudoku.findall(self.possibleInputs, key)) == 1:    #if the input is within the legal range
+            print("it's legal.")
             self.grids[x][y].setText(str(key))
-            sudoku.rawplace(x, y, key)
+            print('text is set.')
+            self.b1.rawplace(x, y, key)
+            print('placement succeessful')
         elif key == 16777171:     #Detect a backspace and clear the grid and put a zero in the sudoku engine.
             self.grids[x][y].setText('')
-            sudoku.rawplace(x, y, 0)
 
     def keyPressEvent(self, event):    #This is the keypress detector. I use this to determine input to edit grids.
         try:
