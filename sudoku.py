@@ -3,7 +3,7 @@ import random as rnd
 class row():
     def __init__(self):
         self.grid = [0, 0, 0, 0, 0, 0, 0, 0, 0]
-        print('created row')
+        #print('created row')
 
 class col():
     def __init__(self):
@@ -21,7 +21,7 @@ class board():
         self.rows = [row(), row(), row(), row(), row(), row() ,row(), row(), row()]
         self.cols = [col(), col(), col(), col(), col(), col(), col(), col(), col()]
         self.subs = [sub(), sub(), sub(), sub(), sub(), sub(), sub(), sub(), sub()]
-        print('Board created.')
+        #print('Board created.')
     
     def setup(self):
         if self.mode == 'easy':
@@ -30,7 +30,8 @@ class board():
             numtoremove = 50
         if self.mode == 'hard':
             numtoremove = 60
-
+        self.lockedGrids = []
+        self.errors = []
         for i in self.rows:
             for j in i.grid:
                 j = 0
@@ -45,6 +46,11 @@ class board():
         self.printboard(mode = 'rows')
         print('---------')
         self.printboard(mode = 'cols')
+
+        for x in range(9):    #find all the non-zero grids and add them to the list of locked grids.
+            for y in range(9):
+                if self.rows[y].grid[x] != 0:
+                    self.lockedGrids.append((x, y))
             
     def clear(self):
         for i in self.rows:
@@ -57,24 +63,23 @@ class board():
             for j in i.grid:
                 j = 0
             
-    def check(self, mode = 'flag'):    #check the grids using the 1-9 system
-        errors = self.rawcheck(mode = mode)    #get the 0-8 version
+    def check(self, mode = 'flag', ignoreLocked = False):    #check the grids using the 1-9 system
+        errors = self.rawcheck(mode = mode, ignoreLocked = ignoreLocked)    #get the 0-8 version
         niceErrors = []    #make an empty list
         for i in errors:    #for each 0-8 error
             a, b = i    #unpack the tuple
             niceErrors.append(a + 1, b + 1)    #make a new tuple with the 1-9 version and add it to the nice errors
         return niceErrors    #return it
 
-    def rawcheck(self, mode = 'flag'):    #check the grids using the 0-8 system
+    def rawcheck(self, mode = 'flag', ignoreLocked = False):    #check the grids using the 0-8 system
         self.errors = []
-        self.error = False
         for i in range(9):     #address of the rows
-            print('checking row {}'.format(str(i)))
+            #print('checking row {}'.format(str(i)))
             for j in range(1, 10):    #numbers to be checked
-                print('Number: {}'.format(str(j)))
+                #print('Number: {}'.format(str(j)))
                 instances = findall(self.rows[i].grid, j)    #find all the instances of the current number
-                print(instances, end = ' ')
-                print(len(instances))
+                #print(instances, end = ' ')
+                #print(len(instances))
                 if len(instances) > 1:    #if there are multiple instances
                     for k in instances:    #for each grid which has an error
                         self.errors.append((k, i))    #append the x and y locations of the error in a tuple to the board's list of errors
@@ -89,12 +94,12 @@ class board():
         self.carry('rows', 'subs')
         
         for i in range(9):     #address of the rows
-            print('checking col {}'.format(str(i)))
+            #print('checking col {}'.format(str(i)))
             for j in range(1, 10):    #numbers to be checked
-                print('Number: {}'.format(str(j)))
+                #print('Number: {}'.format(str(j)))
                 instances = findall(self.cols[i].grid, j)    #find all the instances of the current number
-                print(instances, end = ' ')
-                print(len(instances))
+                #print(instances, end = ' ')
+                #print(len(instances))
                 if len(instances) > 1:    #if there are multiple instances
                     for k in instances:    #for each grid which has an error
                         self.errors.append((i, k))    #append the x and y locations of the error in a tuple to the board's list of errors
@@ -109,12 +114,12 @@ class board():
         self.carry('cols', 'subs')
         
         for i in range(9):     #address of the rows
-            print('checking sub {}'.format(str(i)))
+            #print('checking sub {}'.format(str(i)))
             for j in range(1, 10):    #numbers to be checked
-                print('Number: {}'.format(str(j)))
+                #print('Number: {}'.format(str(j)))
                 instances = findall(self.subs[i].grid, j)    #find all the instances of the current number
-                print(instances, end = ' ')
-                print(len(instances))
+                #print(instances, end = ' ')
+                #print(len(instances))
                 if len(instances) > 1:    #if there are multiple instances
                     for k in instances:    #for each grid which has an error
                         self.errors.append(self.subsToCoord(i, k))    #append the x and y locations of the error in a tuple to the board's list of errors
@@ -127,10 +132,19 @@ class board():
                     self.won = False
         self.carry('subs', 'rows')    #carry to the other datatypes
         self.carry('subs', 'cols')
-        
+
         if len(self.errors) and mode == 'remove':    #if there were errors and the mode is remove
             self.won = False    #you haven't won yet
-            self.rawcheck(mode = 'remove')    #call it again!!
+            self.rawcheck(mode = 'remove')    #check it again!!
+        
+        errorList = []    #This section removes the locked grids from the error list and removes the multiple instances of errors.
+        for i in self.errors:
+            for j in self.lockedGrids:
+                if i != j and len(findall(errorList, i)) == 0:
+                    errorList.append(i)
+        print("self.errors: {}".format(self.errors))
+        print("errorList: {}".format(errorList))
+        self.errors = errorList
 
         return self.errors    #return the list of errors.
                 
@@ -159,13 +173,13 @@ class board():
     
     def place(self, xloc, yloc, val):    #place a value with the 1-9 convention
         try:
-            print(str(xloc) + ', ' + str(yloc) + ', ' + str(val))
+            #print(str(xloc) + ', ' + str(yloc) + ', ' + str(val))
             return self.rawplace(int(xloc) - 1, int(yloc) - 1, int(val))
         except:
             return False
     
     def rawplace(self, xloc, yloc, val):    #place a value with the 0-8 convention
-        print("function: 'rawplace'")
+        #print("function: 'rawplace'")
         try:
             if xloc > 8 or xloc < 0 or yloc > 8 or yloc < 0:
                 print('Out of range')
@@ -250,8 +264,8 @@ class board():
             for j in range(3):    #for each row in that row of subs
                 for k in range(3):    #for each third of that row
                     for l in range(3):    #for each grid in that third
-                        x = (3 * i) + j
-                        y = (3 * k) + l
+                        x = (3 * k) + l
+                        y = (3 * i) + j
                         subID = (3 * i) + k
                         gridID = (3 * j) + l
                         if subID == subIn and gridID == gridIn:

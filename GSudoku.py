@@ -10,8 +10,15 @@
 # - Added a clear button and connected it. Updated the directions to a slight degree.
 # V 1.0.4
 # - Replaced the 200 or so lines of hard code in sudoku.check for the subgrid carry with an algorithm. Utilized that algirithm to find the x, y coordinates of dubgrid locations. Added a mode system to sudoku.check which flags errors instead of clearing them.
+# V 1.0.5
+# - Connected the check button in the GUI. Fixed issues with editing grids and got the check function halfway working."
+# V 1.0.6
+# - Added a grid locking mechanism to the engine. Fixed most of the issues that arose with that. Added an autorun script for easy debugging.
+try:
+    import sudoku
+except:
+    from Sudoku import sudoku
 
-from Sudoku import sudoku
 try:
     from PyQt5 import QtWidgets
     from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton
@@ -105,6 +112,10 @@ class sudokuApp(QMainWindow):
                     grid.setEnabled(False)
                     grid.setStyleSheet(self.disabledStyle)
                     self.lockedGrids.append((x, y))
+        print(self.lockedGrids)
+        self.lockedGrids = self.b1.lockedGrids
+        print(self.lockedGrids)
+
     def clear(self):    #Clear the board.
         self.b1.clear()
         for x in range(9):
@@ -124,6 +135,7 @@ class sudokuApp(QMainWindow):
         for i in self.badGrids:    #for each of the new bad grids
             x, y = i    #unpack the (x, y) coordinates
             self.grids[x][y].setStyleSheet(self.errorStyle)    #color that grid
+        print(self.badGrids)    #debugging
 
     def selectGrid(self):    #Determine the grid clicked on by the user. Color it and reset its toggled state.
         if type(self.activeGrid) == type((8, 7)):
@@ -147,9 +159,10 @@ class sudokuApp(QMainWindow):
             self.grids[x][y].setText(str(key))
             print('text is set.')
             self.b1.rawplace(x, y, key)
-            print('placement succeessful')
+            print('placement successful')
         elif key == 16777171:     #Detect a backspace and clear the grid and put a zero in the sudoku engine.
             self.grids[x][y].setText('')
+            self.b1.rawplace(x, y, 0)
 
     def keyPressEvent(self, event):    #This is the keypress detector. I use this to determine input to edit grids.
         try:
