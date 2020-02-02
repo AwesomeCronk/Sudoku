@@ -14,6 +14,9 @@
 # - Connected the check button in the GUI. Fixed issues with editing grids and got the check function halfway working."
 # V 1.0.6
 # - Added a grid locking mechanism to the engine. Fixed most of the issues that arose with that. Added an autorun script for easy debugging.
+# V 1.0.7
+# - Fixed the issue with locked grids being selected as errors.
+
 try:
     import sudoku
 except:

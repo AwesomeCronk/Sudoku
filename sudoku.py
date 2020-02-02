@@ -30,18 +30,23 @@ class board():
             numtoremove = 50
         if self.mode == 'hard':
             numtoremove = 60
+
         self.lockedGrids = []
         self.errors = []
         for i in self.rows:
             for j in i.grid:
                 j = 0
         
-        for i in range(9):
+        for i in range(9):    #fill the board with random numbers
             for j in range(9):
                 self.rawplace(i, j, rnd.randint(1, 9))
-        self.rawcheck(mode = 'remove')
-        for i in range(rnd.randint(numtoremove, numtoremove + 10)):
+
+        self.rawcheck(mode = 'remove')    #remove the problem numbers
+
+        for i in range(rnd.randint(numtoremove, numtoremove + 10)):    #make some more empty spaces
             self.rawplace(rnd.randint(0, 8), rnd.randint(0, 8), 0)
+
+        #debugging
         self.printboard()
         self.printboard(mode = 'rows')
         print('---------')
@@ -51,8 +56,10 @@ class board():
             for y in range(9):
                 if self.rows[y].grid[x] != 0:
                     self.lockedGrids.append((x, y))
+
+        print("lockedGrids: {}".format(self.lockedGrids))
             
-    def clear(self):
+    def clear(self):    #set every grid to zero
         for i in self.rows:
             for j in i.grid:
                 j = 0
@@ -73,6 +80,9 @@ class board():
 
     def rawcheck(self, mode = 'flag', ignoreLocked = False):    #check the grids using the 0-8 system
         self.errors = []
+        
+
+        #----------rows----------#
         for i in range(9):     #address of the rows
             #print('checking row {}'.format(str(i)))
             for j in range(1, 10):    #numbers to be checked
@@ -82,7 +92,14 @@ class board():
                 #print(len(instances))
                 if len(instances) > 1:    #if there are multiple instances
                     for k in instances:    #for each grid which has an error
-                        self.errors.append((k, i))    #append the x and y locations of the error in a tuple to the board's list of errors
+                        location = (k, i)
+                        isLocked = False
+                        for l in self.lockedGrids:
+                            if location == l:
+                                isLocked = True
+                        if not isLocked:
+                            self.errors.append(location)    #append the x and y locations of the error in a tuple to the board's list of errors
+                            print("added error.")
                     if mode == 'remove':    #if the mode is remove
                         self.rows[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
 
@@ -93,7 +110,9 @@ class board():
         self.carry('rows', 'cols')    #carry to the other datatypes
         self.carry('rows', 'subs')
         
-        for i in range(9):     #address of the rows
+
+        #---------columns----------#
+        for i in range(9):     #address of the cols
             #print('checking col {}'.format(str(i)))
             for j in range(1, 10):    #numbers to be checked
                 #print('Number: {}'.format(str(j)))
@@ -102,7 +121,14 @@ class board():
                 #print(len(instances))
                 if len(instances) > 1:    #if there are multiple instances
                     for k in instances:    #for each grid which has an error
-                        self.errors.append((i, k))    #append the x and y locations of the error in a tuple to the board's list of errors
+                        location = (i, k)
+                        isLocked = False
+                        for l in self.lockedGrids:
+                            if location == l:
+                                isLocked = True
+                        if not isLocked:
+                            self.errors.append(location)    #append the x and y locations of the error in a tuple to the board's list of errors
+                            print("added error.")
                     if mode == 'remove':    #if the mode is remove
                         self.cols[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
 
@@ -113,7 +139,9 @@ class board():
         self.carry('cols', 'rows')    #carry to the other datatypes
         self.carry('cols', 'subs')
         
-        for i in range(9):     #address of the rows
+        
+        #----------subgrids----------#
+        for i in range(9):     #address of the subs
             #print('checking sub {}'.format(str(i)))
             for j in range(1, 10):    #numbers to be checked
                 #print('Number: {}'.format(str(j)))
@@ -122,7 +150,14 @@ class board():
                 #print(len(instances))
                 if len(instances) > 1:    #if there are multiple instances
                     for k in instances:    #for each grid which has an error
-                        self.errors.append(self.subsToCoord(i, k))    #append the x and y locations of the error in a tuple to the board's list of errors
+                        location = self.subsToCoord(i, k)
+                        isLocked = False
+                        for l in self.lockedGrids:
+                            if location == l:
+                                isLocked = True
+                        if not isLocked:
+                            self.errors.append(location)    #append the x and y locations of the error in a tuple to the board's list of errors
+                            print("added error.")
                     if mode == 'remove':    #if the mode is remove
                         self.subs[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
 
@@ -133,13 +168,20 @@ class board():
         self.carry('subs', 'rows')    #carry to the other datatypes
         self.carry('subs', 'cols')
 
+        print("errors: {}  mode: {}".format(self.errors, mode))
         if len(self.errors) and mode == 'remove':    #if there were errors and the mode is remove
+            print("Looping...")
             self.won = False    #you haven't won yet
             self.rawcheck(mode = 'remove')    #check it again!!
-        
+        else:
+            print("Done.")
+            
+        #----------cleanup----------#
         errorList = []    #This section removes the locked grids from the error list and removes the multiple instances of errors.
         for i in self.errors:
             for j in self.lockedGrids:
+                #print("self.errors: {}".format(i))
+                #print("self.lockedGrids: {}".format(j))
                 if i != j and len(findall(errorList, i)) == 0:
                     errorList.append(i)
         print("self.errors: {}".format(self.errors))
