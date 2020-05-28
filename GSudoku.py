@@ -27,6 +27,7 @@ try:
     from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton
 except:
     input('Please install PyQt5 before using the GUI system. (press enter to close)')
+    exit()
 
 class sudokuApp(QMainWindow):
     activeGrid = 'no active grid'
@@ -37,6 +38,7 @@ class sudokuApp(QMainWindow):
     errorStyle = "color: #000000; background-color: #FF0000;"
     badGrids = []
     lockedGrids = []
+
     def __init__(self):
         super(sudokuApp, self).__init__()
         self.setWindowTitle('Sudoku')
@@ -44,6 +46,9 @@ class sudokuApp(QMainWindow):
         self.configureUI()
         self.activateUI()
         self.b1 = sudoku.board()
+
+    #Initialization functions----------------------------------------------------------------------------
+    #----------------------------------------------------------------------------------------------------
 
     def createUI(self):    #Create all the buttons, etcetera
         #nine columns of buttons, nine buttons to a column. Reference grids with self.grids[x][y]
@@ -97,7 +102,12 @@ class sudokuApp(QMainWindow):
         self.setupBtn.clicked.connect(self.setup)
         self.clearBtn.clicked.connect(self.clear)
         self.checkBtn.clicked.connect(self.check)
+        self.solveBtn.clicked.connect(self.solve)
         
+    
+    #Button functions------------------------------------------------------------------------------------
+    #----------------------------------------------------------------------------------------------------
+
     def setup(self):    #Set up the board for a new game.
         self.lockedGrids = []
         self.b1.setup()
@@ -140,10 +150,21 @@ class sudokuApp(QMainWindow):
             self.grids[x][y].setStyleSheet(self.errorStyle)    #color that grid
         print(self.badGrids)    #debugging
 
+    def solve(self):
+        print("Function: GSudoku.sudokuApp.solve")
+        self.b1.solve()
+
+
+    #Internal functions----------------------------------------------------------------------------------
+    #----------------------------------------------------------------------------------------------------
+
     def selectGrid(self):    #Determine the grid clicked on by the user. Color it and reset its toggled state.
         if type(self.activeGrid) == type((8, 7)):
             x, y = self.activeGrid
-            self.grids[x][y].setStyleSheet(self.openStyle)
+            if (x, y) in self.badGrids:
+                self.grids[x][y].setStyleSheet(self.errorStyle)
+            else:
+                self.grids[x][y].setStyleSheet(self.openStyle)
         for x in range(9):
             for y in range(9):
                 grid = self.grids[x][y]
@@ -154,15 +175,17 @@ class sudokuApp(QMainWindow):
                     grid.setStyleSheet(self.activeStyle)
 
     def editGrid(self, key):    #Plug a value into a grid and send it to the sudoku engine.
-        print('Function: editGrid')
+        #print('Function: editGrid')
         x, y = self.activeGrid
-        print('got active grid.')
+        #print('got active grid.')
         if len(sudoku.findall(self.possibleInputs, key)) == 1:    #if the input is within the legal range
-            print("it's legal.")
+            #print("it's legal.")
             self.grids[x][y].setText(str(key))
-            print('text is set.')
+            #print('text is set.')
             self.b1.rawplace(x, y, key)
-            print('placement successful')
+            #print('placement successful')
+            if (x, y) in self.badGrids:
+                self.grids.remove((x, y))
         elif key == 16777171:     #Detect a backspace and clear the grid and put a zero in the sudoku engine.
             self.grids[x][y].setText('')
             self.b1.rawplace(x, y, 0)
@@ -182,7 +205,7 @@ def Game():    #Triggers all the magic above.
     gameInstance.show()
     app.exec_()
 
-def reloadEngine():    #Function to reload the sudoku engine, so that I can continue working in the same terminal.
+def reloadEngine():    #Function to reload the sudoku engine, so that I can continue working in the same terminal when testing interactively in the Python terminal.
     import importlib
     importlib.reload(sudoku)
     print('Reloaded sudoku game engine.')

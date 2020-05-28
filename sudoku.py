@@ -101,7 +101,11 @@ class board():
                             self.errors.append(location)    #append the x and y locations of the error in a tuple to the board's list of errors
                             print("added error.")
                     if mode == 'remove':    #if the mode is remove
-                        self.rows[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
+                        if (i, instances[len(instances) - 1]) in self.lockedGrids:
+                            if ignoreLocked:
+                                self.rows[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
+                        else:
+                            self.rows[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
 
                 if len(instances) == 0:    #check to see if all grids are filled and set the won variable accordingly
                     self.won = True
@@ -130,7 +134,11 @@ class board():
                             self.errors.append(location)    #append the x and y locations of the error in a tuple to the board's list of errors
                             print("added error.")
                     if mode == 'remove':    #if the mode is remove
-                        self.cols[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
+                        if (i, instances[len(instances) - 1]) in self.lockedGrids:
+                            if ignoreLocked:
+                                self.cols[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
+                        else:
+                            self.cols[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
 
                 if len(instances) == 0:    #check to see if all grids are filled and set the won variable accordingly
                     self.won = True
@@ -159,7 +167,11 @@ class board():
                             self.errors.append(location)    #append the x and y locations of the error in a tuple to the board's list of errors
                             print("added error.")
                     if mode == 'remove':    #if the mode is remove
-                        self.subs[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
+                        if (i, instances[len(instances) - 1]) in self.lockedGrids:
+                            if ignoreLocked:
+                                self.subs[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
+                        else:
+                            self.subs[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
 
                 if len(instances) == 0:    #check to see if all grids are filled and set the won variable accordingly
                     self.won = True
@@ -181,7 +193,7 @@ class board():
         for i in self.errors:
             for j in self.lockedGrids:
                 #print("self.errors: {}".format(i))
-                #print("self.lockedGrids: {}".format(j))
+                print("self.lockedGrids: {}".format(j))
                 if i != j and len(findall(errorList, i)) == 0:
                     errorList.append(i)
         print("self.errors: {}".format(self.errors))
@@ -212,6 +224,30 @@ class board():
                 if lnctr in [3, 6]:
                     print('|-------+-------+-------|')
             print('-------------------------')
+
+    def solve(self):
+        print("Function: sudoku.board.solve")
+        solved = False
+        while(not solved):
+            for x in range(9):
+                for y in range(9):
+                    if not (x, y) in findall(self.lockedGrids, (x, y)):    #if that point is not locked
+                        for i in range(1, 9):
+                            self.rawplace(x, y, i)
+                            self.rawcheck(mode = 'remove')
+
+                            solved = True
+                            for j in self.rows:
+                                if 0 in j.grid:
+                                    solved = False
+                                    
+                            for j in self.cols:
+                                if 0 in j.grid:
+                                    solved = False
+                                    
+                            for j in self.subs:
+                                if 0 in j.grid:
+                                    solved = False
     
     def place(self, xloc, yloc, val):    #place a value with the 1-9 convention
         try:
