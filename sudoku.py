@@ -83,27 +83,20 @@ class board():
         self.errors = []
         print('rawcheck called.=============================================================')
 
-        self.checkGroup(self.rows, mode, ignoreLocked)
+        self.checkGroup(self.rows)
         self.carry('rows', 'cols')    #carry to the other datatypes
         self.carry('rows', 'subs')
         self.printboard()
-        self.checkGroup(self.cols, mode, ignoreLocked)
+        self.checkGroup(self.cols)
         self.carry('cols', 'rows')    #carry to the other datatypes
         self.carry('cols', 'subs')
         self.printboard()
-        self.checkGroup(self.subs, mode, ignoreLocked)
+        self.checkGroup(self.subs)
         self.carry('subs', 'rows')    #carry to the other datatypes
         self.carry('subs', 'cols')
         self.printboard()
 
-        print("errors: {}  mode: {}".format(self.errors, mode))
-        if len(self.errors) and mode == 'remove':    #if there were errors and the mode is remove
-            print("Looping...")
-            self.won = False    #you haven't won yet
-            self.rawcheck(mode = 'remove', recursionDepth = recursionDepth + 1)    #check it again!!
-        else:
-            print("Done.")
-            
+        
         #----------cleanup----------#
         errorList = []    #This section removes the locked grids from the error list and removes the multiple instances of errors.
         for i in self.errors:
@@ -115,10 +108,25 @@ class board():
         print("self.errors: {}".format(self.errors))
         print("errorList: {}".format(errorList))
         self.errors = errorList
+        
+        print("errors: {}  mode: {}".format(self.errors, mode))
+        
+        #Wipe all erroneous grids
+        if mode == 'remove':
+            for e in self.errors:
+                self.rawplace(e[0], e[1], 0)    #clear each error point from the board.
+#                del(self.errors[self.errors.index(e)])     #Uncomment this to remove the errors from the list and prevent the last run of rawcheck.
 
+        if len(self.errors) and mode == 'remove':    #if there were errors and the mode is remove
+            print("Looping...")
+            self.won = False    #you haven't won yet
+            self.rawcheck(mode = 'remove', recursionDepth = recursionDepth + 1)    #check it again!!
+        else:
+            print("Done.")
+            
         return self.errors    #return the list of errors.
 
-    def checkGroup(self, group, mode, ignoreLocked):
+    def checkGroup(self, group):
         print('Checking group: {}'.format(group))
         for i in range(9):     #address of the rows
             print('Checking address: {}'.format(i))
@@ -140,17 +148,18 @@ class board():
                         if not isLocked:
                             self.errors.append(location)    #append the x and y locations of the error in a tuple to the board's list of errors
                             print("added error.")
-                    if mode == 'remove':    #if the mode is remove
-                        if (i, instances[len(instances) - 1]) in self.lockedGrids:
-                            if ignoreLocked:
-                                group[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
-                        else:
-                            group[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
+#                    if mode == 'remove':    #if the mode is remove
+#                        if (i, instances[len(instances) - 1]) in self.lockedGrids:
+#                            if ignoreLocked:
+#                                group[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
+#                        else:
+#                            group[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
 
-                if len(instances) == 0:    #check to see if all grids are filled and set the won variable accordingly
-                    self.won = True
-                else:
-                    self.won = False
+                #Not sure why this is here...
+#                if len(instances) == 0:    #check to see if all grids are filled and set the won variable accordingly
+#                    self.won = True
+#                else:
+#                    self.won = False
         
 
                 
