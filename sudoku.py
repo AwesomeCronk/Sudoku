@@ -33,9 +33,7 @@ class board():
 
         self.lockedGrids = []
         self.errors = []
-        for i in self.rows:
-            for j in i.grid:
-                j = 0
+        self.clear()
         
         for i in range(9):    #fill the board with random numbers
             for j in range(9):
@@ -78,18 +76,21 @@ class board():
             niceErrors.append(a + 1, b + 1)    #make a new tuple with the 1-9 version and add it to the nice errors
         return niceErrors    #return it
 
-    def rawcheck(self, mode = 'flag', ignoreLocked = False):    #check the grids using the 0-8 system
+    def rawcheck(self, mode = 'flag', ignoreLocked = False, recursionDepth = 0):    #check the grids using the 0-8 system
+        maxRecursionDepth = 5
+        if recursionDepth >= maxRecursionDepth:
+            raise RecursionError("rawcheck has exceeded its max recursion depth.")
         self.errors = []
-        
+        print('rawcheck called.=============================================================')
 
         #----------rows----------#
         for i in range(9):     #address of the rows
-            #print('checking row {}'.format(str(i)))
+            print('checking row {}'.format(str(i)))
             for j in range(1, 10):    #numbers to be checked
-                #print('Number: {}'.format(str(j)))
+                print('Number: {}'.format(str(j)))
                 instances = findall(self.rows[i].grid, j)    #find all the instances of the current number
-                #print(instances, end = ' ')
-                #print(len(instances))
+                print(instances, end = ' ')
+                print(len(instances))
                 if len(instances) > 1:    #if there are multiple instances
                     for k in instances:    #for each grid which has an error
                         location = (k, i)
@@ -117,12 +118,12 @@ class board():
 
         #---------columns----------#
         for i in range(9):     #address of the cols
-            #print('checking col {}'.format(str(i)))
+            print('checking col {}'.format(str(i)))
             for j in range(1, 10):    #numbers to be checked
-                #print('Number: {}'.format(str(j)))
+                print('Number: {}'.format(str(j)))
                 instances = findall(self.cols[i].grid, j)    #find all the instances of the current number
-                #print(instances, end = ' ')
-                #print(len(instances))
+                print(instances, end = ' ')
+                print(len(instances))
                 if len(instances) > 1:    #if there are multiple instances
                     for k in instances:    #for each grid which has an error
                         location = (i, k)
@@ -150,12 +151,12 @@ class board():
         
         #----------subgrids----------#
         for i in range(9):     #address of the subs
-            #print('checking sub {}'.format(str(i)))
+            print('checking sub {}'.format(str(i)))
             for j in range(1, 10):    #numbers to be checked
-                #print('Number: {}'.format(str(j)))
+                print('Number: {}'.format(str(j)))
                 instances = findall(self.subs[i].grid, j)    #find all the instances of the current number
-                #print(instances, end = ' ')
-                #print(len(instances))
+                print(instances, end = ' ')
+                print(len(instances))
                 if len(instances) > 1:    #if there are multiple instances
                     for k in instances:    #for each grid which has an error
                         location = self.subsToCoord(i, k)
@@ -184,7 +185,7 @@ class board():
         if len(self.errors) and mode == 'remove':    #if there were errors and the mode is remove
             print("Looping...")
             self.won = False    #you haven't won yet
-            self.rawcheck(mode = 'remove')    #check it again!!
+            self.rawcheck(mode = 'remove', recursionDepth = recursionDepth + 1)    #check it again!!
         else:
             print("Done.")
             
@@ -192,7 +193,7 @@ class board():
         errorList = []    #This section removes the locked grids from the error list and removes the multiple instances of errors.
         for i in self.errors:
             for j in self.lockedGrids:
-                #print("self.errors: {}".format(i))
+                print("self.errors: {}".format(i))
                 print("self.lockedGrids: {}".format(j))
                 if i != j and len(findall(errorList, i)) == 0:
                     errorList.append(i)
