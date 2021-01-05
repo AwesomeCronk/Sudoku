@@ -83,103 +83,18 @@ class board():
         self.errors = []
         print('rawcheck called.=============================================================')
 
-        #----------rows----------#
-        for i in range(9):     #address of the rows
-            print('checking row {}'.format(str(i)))
-            for j in range(1, 10):    #numbers to be checked
-                print('Number: {}'.format(str(j)))
-                instances = findall(self.rows[i].grid, j)    #find all the instances of the current number
-                print(instances, end = ' ')
-                print(len(instances))
-                if len(instances) > 1:    #if there are multiple instances
-                    for k in instances:    #for each grid which has an error
-                        location = (k, i)
-                        isLocked = False
-                        for l in self.lockedGrids:
-                            if location == l:
-                                isLocked = True
-                        if not isLocked:
-                            self.errors.append(location)    #append the x and y locations of the error in a tuple to the board's list of errors
-                            print("added error.")
-                    if mode == 'remove':    #if the mode is remove
-                        if (i, instances[len(instances) - 1]) in self.lockedGrids:
-                            if ignoreLocked:
-                                self.rows[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
-                        else:
-                            self.rows[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
-
-                if len(instances) == 0:    #check to see if all grids are filled and set the won variable accordingly
-                    self.won = True
-                else:
-                    self.won = False
+        self.checkGroup(self.rows, mode, ignoreLocked)
         self.carry('rows', 'cols')    #carry to the other datatypes
         self.carry('rows', 'subs')
-        
-
-        #---------columns----------#
-        for i in range(9):     #address of the cols
-            print('checking col {}'.format(str(i)))
-            for j in range(1, 10):    #numbers to be checked
-                print('Number: {}'.format(str(j)))
-                instances = findall(self.cols[i].grid, j)    #find all the instances of the current number
-                print(instances, end = ' ')
-                print(len(instances))
-                if len(instances) > 1:    #if there are multiple instances
-                    for k in instances:    #for each grid which has an error
-                        location = (i, k)
-                        isLocked = False
-                        for l in self.lockedGrids:
-                            if location == l:
-                                isLocked = True
-                        if not isLocked:
-                            self.errors.append(location)    #append the x and y locations of the error in a tuple to the board's list of errors
-                            print("added error.")
-                    if mode == 'remove':    #if the mode is remove
-                        if (i, instances[len(instances) - 1]) in self.lockedGrids:
-                            if ignoreLocked:
-                                self.cols[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
-                        else:
-                            self.cols[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
-
-                if len(instances) == 0:    #check to see if all grids are filled and set the won variable accordingly
-                    self.won = True
-                else:
-                    self.won = False
+        self.printboard()
+        self.checkGroup(self.cols, mode, ignoreLocked)
         self.carry('cols', 'rows')    #carry to the other datatypes
         self.carry('cols', 'subs')
-        
-        
-        #----------subgrids----------#
-        for i in range(9):     #address of the subs
-            print('checking sub {}'.format(str(i)))
-            for j in range(1, 10):    #numbers to be checked
-                print('Number: {}'.format(str(j)))
-                instances = findall(self.subs[i].grid, j)    #find all the instances of the current number
-                print(instances, end = ' ')
-                print(len(instances))
-                if len(instances) > 1:    #if there are multiple instances
-                    for k in instances:    #for each grid which has an error
-                        location = self.subsToCoord(i, k)
-                        isLocked = False
-                        for l in self.lockedGrids:
-                            if location == l:
-                                isLocked = True
-                        if not isLocked:
-                            self.errors.append(location)    #append the x and y locations of the error in a tuple to the board's list of errors
-                            print("added error.")
-                    if mode == 'remove':    #if the mode is remove
-                        if (i, instances[len(instances) - 1]) in self.lockedGrids:
-                            if ignoreLocked:
-                                self.subs[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
-                        else:
-                            self.subs[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
-
-                if len(instances) == 0:    #check to see if all grids are filled and set the won variable accordingly
-                    self.won = True
-                else:
-                    self.won = False
+        self.printboard()
+        self.checkGroup(self.subs, mode, ignoreLocked)
         self.carry('subs', 'rows')    #carry to the other datatypes
         self.carry('subs', 'cols')
+        self.printboard()
 
         print("errors: {}  mode: {}".format(self.errors, mode))
         if len(self.errors) and mode == 'remove':    #if there were errors and the mode is remove
@@ -202,6 +117,42 @@ class board():
         self.errors = errorList
 
         return self.errors    #return the list of errors.
+
+    def checkGroup(self, group, mode, ignoreLocked):
+        print('Checking group: {}'.format(group))
+        for i in range(9):     #address of the rows
+            print('Checking address: {}'.format(i))
+            for j in range(1, 10):    #numbers to be checked
+                #print('Number: {}'.format(str(j)))
+                instances = findall(group[i].grid, j)    #find all the instances of the current number
+                #print(instances, end = ' ')
+                #print(len(instances))
+                if len(instances):
+                    print('Found {} instances of number {} at {}'.format(len(instances), j, instances))
+
+                if len(instances) > 1:    #if there are multiple instances
+                    for k in instances:    #for each grid which has an error
+                        location = (k, i)
+                        isLocked = False
+                        for l in self.lockedGrids:
+                            if location == l:
+                                isLocked = True
+                        if not isLocked:
+                            self.errors.append(location)    #append the x and y locations of the error in a tuple to the board's list of errors
+                            print("added error.")
+                    if mode == 'remove':    #if the mode is remove
+                        if (i, instances[len(instances) - 1]) in self.lockedGrids:
+                            if ignoreLocked:
+                                group[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
+                        else:
+                            group[i].grid[instances[len(instances) - 1]] = 0    #set that grid to 0
+
+                if len(instances) == 0:    #check to see if all grids are filled and set the won variable accordingly
+                    self.won = True
+                else:
+                    self.won = False
+        
+
                 
     def printboard(self, mode = 'pretty'):
         if mode == 'rows':

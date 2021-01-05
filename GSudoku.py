@@ -140,6 +140,7 @@ class sudokuApp(QMainWindow):
                 self.activeGrid = 'no active grid'
 
     def check(self):    #check the board and turn bad grids red.
+        print("Function: GSudoku.sudokuApp.check")
         self.b1.printboard()    #print the board to check that things are overlaying correctly
         for i in self.badGrids:    #for each of the previous bad grids
             x, y = i    #unpack their (x, y) coordinates
